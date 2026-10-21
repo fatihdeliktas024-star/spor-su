@@ -231,4 +231,55 @@ $("notif").onclick=function(){cfg.on=!cfg.on;L.s("cfg",cfg);ns();sched()};
 wh.addEventListener("change",function(){L.s("wh",wh.value===""?null:+wh.value);if(cfg.on)sched()});
 })();
 </script>
+<script>
+(function(){
+var B="https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/";
+var SP={
+"Dumbbell Bench Press":{i:["Dumbbell_Bench_Press"],k:[["dumbbell","bench","press"]],x:["incline","decline","alternate","one-arm","reverse","neutral","close"]},
+"Incline Dumbbell Press":{i:["Incline_Dumbbell_Press"],k:[["incline","dumbbell","press"]],x:["reverse","alternate","neutral","one-arm","fly"]},
+"Dumbbell Shoulder Press":{i:["Dumbbell_Shoulder_Press"],k:[["dumbbell","shoulder","press"],["seated","dumbbell","press"]],x:["arnold","alternat","one-arm","incline","single"]},
+"Lateral Raise":{i:["Side_Lateral_Raise"],k:[["lateral","raise"]],x:["front","cable","bent","reverse","one-arm","lying","leaning","incline","machine","band","seated"]},
+"Triceps Extension":{i:["Standing_Dumbbell_Triceps_Extension"],k:[["dumbbell","triceps","extension"]],x:["lying","one-arm","incline","decline","reverse","cable","alternate","kneeling","seated"]},
+"Plank":{i:["Plank"],k:[["plank"]],x:["side","reverse","ball","walk","push"]},
+"Dumbbell Row":{i:["Bent_Over_Two-Dumbbell_Row"],k:[["bent","over","dumbbell","row"]],x:["one-arm","alternate","incline","reverse","palms","press","chest","single"]},
+"Tek Kol Dumbbell Row":{i:["One-Arm_Dumbbell_Row"],k:[["one-arm","dumbbell","row"]],x:["incline","reverse","kneeling","seated"]},
+"Dumbbell Curl":{i:["Dumbbell_Bicep_Curl"],k:[["dumbbell","bicep","curl"]],x:["alternate","incline","hammer","concentration","preacher","seated","reverse","lying","cross","one-arm"]},
+"Hammer Curl":{i:["Hammer_Curls"],k:[["hammer","curl"]],x:["rope","cable","incline","cross","zottman","barbell","preacher"]},
+"Reverse Fly":{i:["Reverse_Flyes"],k:[["reverse","fly"],["reverse","flye"]],x:["cable","machine","incline","single","one-arm"]},
+"Goblet Squat":{i:["Goblet_Squat"],k:[["goblet","squat"]],x:[]},
+"Squat":{i:["Dumbbell_Squat"],k:[["dumbbell","squat"],["bodyweight","squat"]],x:["split","single","one","overhead","front","hack","jump","sumo","goblet","bench","box","lunge"]},
+"Romanian Deadlift":{i:["Romanian_Deadlift_With_Dumbbells","Romanian_Deadlift"],k:[["romanian","deadlift"]],x:["single","one","sumo"]},
+"Dumbbell Lunge":{i:["Dumbbell_Lunges"],k:[["dumbbell","lunge"]],x:["walking","reverse","rear","side","step","pass"]},
+"Bulgarian Split Squat":{i:["Single_Leg_Split_Squat","Split_Squat_with_Dumbbells"],k:[["split","squat","dumbbell"],["split","squat"]],x:["jump","front","barbell","smith"]},
+"Hip Thrust":{i:["Barbell_Hip_Thrust","Barbell_Glute_Bridge"],k:[["hip","thrust"],["glute","bridge"]],x:["single","one-leg"]},
+"Calf Raise":{i:["Standing_Dumbbell_Calf_Raise","Standing_Calf_Raises"],k:[["calf","raise","dumbbell"],["standing","calf","raise"]],x:["seated","donkey","smith","machine","single","one","press","barbell"]},
+"Crunch":{i:["Crunches"],k:[["crunch"]],x:["reverse","bicycle","cable","decline","machine","weighted","oblique","ball","stability","side","alternate","double","hanging","kneeling","band","incline","smith","air","cross"]},
+"Reverse Crunch":{i:["Reverse_Crunch"],k:[["reverse","crunch"]],x:["cable","machine","decline","bench","incline"]},
+"_el":{i:["Elliptical_Trainer"],k:[["elliptical"]],x:[]},
+"_bk":{i:[],k:[["bicycling","stationary"],["stationary","bike"],["bike"]],x:["air","recumbent"]}
+};
+var AL={"Bench Press":"Dumbbell Bench Press","Shoulder Press":"Dumbbell Shoulder Press"};
+var map=L.g("phmap2",{}),fig=$("fig"),PH={t:null,i:0};
+var ph=document.createElement("img");ph.className="fig";ph.alt="Hareket fotoğrafı";ph.style.cssText="display:none;object-fit:contain;background:#fff;cursor:pointer";
+var phn=document.createElement("div");phn.className="mut";phn.style.cssText="display:none;text-align:center;margin-top:4px";
+fig.parentNode.insertBefore(ph,fig);fig.parentNode.insertBefore(phn,fig.nextSibling);
+function stopPh(){clearInterval(PH.t);ph.style.display="none";phn.style.display="none";fig.style.display="block"}
+ph.onerror=stopPh;
+ph.onclick=function(){if(fig.style.display==="none"){fig.style.display="block";ph.style.display="none"}else{fig.style.display="none";ph.style.display="block"}};
+function key(x){if(x.n==="Kardiyo"||x.n==="Isınma")return (x.t||"").indexOf("Bisiklet")===0?"_bk":"_el";return AL[x.n]||x.n}
+function photo(x){clearInterval(PH.t);var r=map[key(x)];if(!r||!r.im||!r.im.length){stopPh();return}
+ var u=r.im.map(function(p){return B+"exercises/"+p});PH.i=0;ph.src=u[0];ph.style.display="block";fig.style.display="none";phn.style.display="block";phn.textContent="Örnek fotoğraf: "+r.n+" · dokun: animasyon/fotoğraf";
+ if(u.length>1){u.forEach(function(s){new Image().src=s});PH.t=setInterval(function(){if($("s-run").className!=="on"){stopPh();return}PH.i=1-PH.i;ph.src=u[PH.i]},1200)}}
+var _sf=setFig;setFig=function(x){_sf(x);try{photo(x)}catch(e){stopPh()}};
+var _fin=fin;fin=function(){_fin();stopPh();fig.style.display="none"};
+function res(db){var m={},low={};db.forEach(function(e){low[e.id.toLowerCase()]=e});
+ Object.keys(SP).forEach(function(k){var s=SP[k],f=null;
+  for(var j=0;j<s.i.length&&!f;j++)f=low[s.i[j].toLowerCase()];
+  for(var a=0;a<s.k.length&&!f;a++){var c=db.filter(function(e){var id=e.id.toLowerCase();return e.images&&e.images.length&&s.k[a].every(function(t){return id.indexOf(t)>-1})&&!(s.x||[]).some(function(t){return id.indexOf(t)>-1})});c.sort(function(p,q){return p.id.length-q.id.length});f=c[0]}
+  if(f&&f.images&&f.images.length)m[k]={id:f.id,n:f.name,im:f.images.slice(0,2)}});return m}
+var miss=Object.keys(SP).some(function(k){return !map[k]});
+if(miss&&navigator.onLine!==false&&Date.now()-L.g("phtry2",0)>21600000){L.s("phtry2",Date.now());
+ fetch(B+"dist/exercises.json").then(function(r){return r.json()}).then(function(db){map=res(db);L.s("phmap2",map)}).catch(function(){})}
+})();
+</script>
 </body></html>
