@@ -1,6 +1,6 @@
 {
   "appId": "com.kisisel.sporsu",
-  "appName": "Spor ve Su",
+  "appName": "MyDaily",
   "webDir": "www",
   "server": { "androidScheme": "https" }
 }
