@@ -222,7 +222,7 @@ async function sched(){
   for(var m=cfg.h1*60;m<=cfg.h2*60;m+=cfg.iv){list.push({id:id++,title:"Su vakti 💧",body:"1 bardak (200 ml) su iç.",schedule:{on:{hour:Math.floor(m/60)%24,minute:m%60},allowWhileIdle:true}})}
   var h=parseInt(wh.value,10);
   if(!isNaN(h)&&h>=0&&h<=23)D.forEach(function(d,i){list.push({id:2000+i,title:"Antrenman vakti 💪",body:"Bugün: "+d.ad,schedule:{on:{weekday:i+1,hour:h,minute:0},allowWhileIdle:true}})});
-  await LN.schedule({notifications:list});
+  list.push({id:3000,title:"Aylık ölçüm ve fotoğraf 📸",body:"Ölçülerini al ve ilerleme fotoğrafını çek.",schedule:{on:{day:1,hour:9,minute:0},allowWhileIdle:true}});list.push({id:3001,title:"Haftalık özet 📊",body:"Bu haftanın özeti hazır. Takip sekmesine bak.",schedule:{on:{weekday:1,hour:20,minute:0},allowWhileIdle:true}});await LN.schedule({notifications:list});
   banner("Hatırlatmalar kuruldu ("+list.length+" bildirim)");
  }catch(e){banner("Bildirim kurulamadı: "+e)}
 }
@@ -362,6 +362,59 @@ function phs(){$("phs").textContent="Durum: "+(L.g("phst",null)||"henüz denenme
 $("phr").onclick=function(){$("phs").textContent="Durum: yükleniyor…";window.PHX.load(true).then(phs)};
 document.querySelector('nav button[data-t="plan"]').addEventListener("click",phs);phs();
 drawM();drawL();bk();
+})();
+</script>
+<script>
+(function(){
+function kd(d){return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function isod(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function fdt(s){return s.split("-").slice(1).reverse().join(".")}
+function num(v){var n=parseFloat(v);return isNaN(n)?null:n}
+function avg(a){return a.length?a.reduce(function(p,q){return p+q},0)/a.length:null}
+var IN='padding:10px;border:1px solid var(--ln);border-radius:10px;background:var(--bg);color:var(--ink);font-size:16px;width:100%';
+var sec=document.createElement("section");sec.id="s-track";
+sec.innerHTML='<div class="card"><h2>Haftalık özet</h2><div class="mut">Son 7 gün</div><div id="wsum" style="margin-top:8px"></div></div>'
++'<div class="card"><h2>Günlük kayıt</h2><label>Tarih<input type="date" id="td"></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0"><label>Uyku (saat)<input type="number" step="0.1" inputmode="decimal" id="tsl"></label><label>Adım<input type="number" inputmode="numeric" id="tst"></label><label>Sabah nabzı (atım/dk)<input type="number" inputmode="numeric" id="tpl"></label><label>Protein (g)<input type="number" inputmode="numeric" id="tpr"></label></div><label>Not (öğün, his, vb.)<input type="text" id="tnt" style="'+IN+'"></label><div class="mut" id="tph" style="margin:8px 0"></div><button class="btn" id="tsv">Kaydet</button></div>'
++'<div class="card"><h2>İlerleme fotoğrafı</h2><div class="mut">Ayda bir, hep aynı yerde, aynı ışıkta ve aynı pozda çek.</div><input type="file" accept="image/*" id="pin" style="margin:10px 0;width:100%"><div class="row"><label>Önce<select id="pa"></select></label><label>Sonra<select id="pb"></select></label></div><div class="row" style="margin-top:10px;align-items:flex-start"><div><img id="ia" alt="" style="width:100%;border-radius:10px;display:none"><div class="mut" id="ca"></div></div><div><img id="ib" alt="" style="width:100%;border-radius:10px;display:none"><div class="mut" id="cb"></div></div></div><div id="plist" style="margin-top:10px"></div></div>';
+document.body.insertBefore(sec,document.querySelector("nav"));
+var nb=document.createElement("button");nb.dataset.t="track";nb.textContent="Takip";nb.onclick=function(){show("track")};document.querySelector("nav").appendChild(nb);
+var _sh=show;show=function(t){_sh(t);$("s-track").className=t==="track"?"on":"";if(t==="track")renderT()};
+function bar(l,v,mx,t){return '<div style="margin:10px 0"><div style="display:flex;justify-content:space-between"><b>'+l+'</b><span>'+t+'</span></div><div style="height:8px;background:var(--ln);border-radius:4px;margin-top:4px"><div style="height:8px;width:'+Math.min(100,v/mx*100)+'%;background:var(--eff);border-radius:4px"></div></div></div>'}
+function line(l,a,u,d){var m=avg(a);return '<div style="margin:8px 0;display:flex;justify-content:space-between"><b>'+l+'</b><span>'+(m===null?"kayıt yok":m.toFixed(d||0)+" "+u+' <span class="mut">('+a.length+' gün)</span>')+'</span></div>'}
+function renderW(){var an=0,wn=0,sl=[],st=[],pl=[],pr=[];
+ for(var i=0;i<7;i++){var d=new Date();d.setDate(d.getDate()-i);var dw=d.getDay(),dn=L.g("done-"+kd(d)+"-"+dw,{}),n=D[dw].x.length,c=Object.keys(dn).filter(function(k){return dn[k]}).length;
+  if(c>=Math.ceil(n/2))an++;if(L.g("w-"+kd(d),0)>=2500)wn++;
+  var e=L.g("day-"+isod(d),null);if(e){if(e.sl!=null)sl.push(e.sl);if(e.st!=null)st.push(e.st);if(e.pl!=null)pl.push(e.pl);if(e.pr!=null)pr.push(e.pr)}}
+ var m=L.g("meas",[]),ch="";[["k","Kilo","kg"],["b","Bel","cm"]].forEach(function(f){var a=m.filter(function(e){return typeof e[f[0]]==="number"});if(a.length>1){var x=a[a.length-1][f[0]]-a[a.length-2][f[0]];ch+='<div style="margin:8px 0;display:flex;justify-content:space-between"><b>'+f[1]+' (son ölçüm)</b><span>'+a[a.length-1][f[0]]+' '+f[2]+' <span class="mut">('+(x>0?"+":"")+x.toFixed(1)+')</span></span></div>'}});
+ var v=an>=5&&wn>=5?"Çok iyi bir hafta. Aynen devam.":an>=3?"İyi gidiyorsun. Hedef: haftada en az 5 antrenman ve 5 gün su.":"Bu hafta biraz geride kaldın. Küçük başla: önce programın ilk gününü tamamla.";
+ $("wsum").innerHTML=bar("Antrenman",an,5,an+" / 7 gün (hedef 5)")+bar("Su hedefi (2,5 L)",wn,5,wn+" / 7 gün")+line("Uyku ort.",sl,"sa",1)+line("Adım ort.",st,"adım")+line("Sabah nabzı ort.",pl,"atım/dk")+line("Protein ort.",pr,"g")+ch+'<div class="tip" style="margin-top:10px">'+v+'</div>'}
+function ph(){var a=L.g("meas",[]).filter(function(e){return typeof e.k==="number"}),k=a.length?a[a.length-1].k:null;$("tph").textContent=k?"Protein hedefi yaklaşık "+Math.round(k*1.6)+" g/gün (kilo × 1.6). Sabah nabzı için kalkınca yataktayken 1 dakika say.":"Kilonu Ölçümler bölümüne girersen protein hedefini hesaplarım."}
+function loadDay(){var e=L.g("day-"+$("td").value,{});$("tsl").value=e.sl!=null?e.sl:"";$("tst").value=e.st!=null?e.st:"";$("tpl").value=e.pl!=null?e.pl:"";$("tpr").value=e.pr!=null?e.pr:"";$("tnt").value=e.nt||""}
+$("td").value=isod(new Date());$("td").onchange=loadDay;
+$("tsv").onclick=function(){var e={sl:num($("tsl").value),st:num($("tst").value),pl:num($("tpl").value),pr:num($("tpr").value),nt:$("tnt").value.trim()};
+ if(e.sl===null&&e.st===null&&e.pl===null&&e.pr===null&&!e.nt){banner("En az bir alan doldur");return}
+ L.s("day-"+($("td").value||isod(new Date())),e);renderW();banner("Kayıt kaydedildi")};
+// fotoğraflar (IndexedDB)
+var DB=null;
+function idb(){return new Promise(function(res,rej){if(!window.indexedDB)return rej("yok");if(DB)return res(DB);var r=indexedDB.open("mydaily",1);r.onupgradeneeded=function(){r.result.createObjectStore("photos",{keyPath:"id",autoIncrement:true})};r.onsuccess=function(){DB=r.result;res(DB)};r.onerror=function(){rej(r.error)}})}
+function pAll(){return idb().then(function(db){return new Promise(function(res){var q=db.transaction("photos").objectStore("photos").getAll();q.onsuccess=function(){res(q.result.sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:a.id-b.id}))};q.onerror=function(){res([])}})}).catch(function(){return[]})}
+function pAdd(r){return idb().then(function(db){return new Promise(function(res,rej){var t=db.transaction("photos","readwrite");t.objectStore("photos").add(r);t.oncomplete=res;t.onerror=rej})})}
+function pDel(id){return idb().then(function(db){return new Promise(function(res){var t=db.transaction("photos","readwrite");t.objectStore("photos").delete(id);t.oncomplete=res})})}
+var PL=[];
+function show2(){var a=PL.filter(function(p){return String(p.id)===$("pa").value})[0],b=PL.filter(function(p){return String(p.id)===$("pb").value})[0];
+ [[a,"ia","ca"],[b,"ib","cb"]].forEach(function(x){var im=$(x[1]);if(x[0]){im.src=x[0].img;im.style.display="block";$(x[2]).textContent=fdt(x[0].d)}else{im.style.display="none";$(x[2]).textContent="";}})}
+function renderP(){pAll().then(function(l){PL=l;var pa=$("pa").value,pb=$("pb").value,o=l.map(function(p){return '<option value="'+p.id+'">'+fdt(p.d)+'</option>'}).join("")||'<option value="">Fotoğraf yok</option>';
+ $("pa").innerHTML=o;$("pb").innerHTML=o;
+ if(l.length){$("pa").value=l.some(function(p){return String(p.id)===pa})?pa:String(l[0].id);$("pb").value=l.some(function(p){return String(p.id)===pb})?pb:String(l[l.length-1].id)}
+ show2();
+ $("plist").innerHTML=l.slice().reverse().map(function(p){return '<div class="ex"><img src="'+p.img+'" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:8px"><span style="flex:1"><b>'+fdt(p.d)+'</b></span><button class="btn g" data-i="'+p.id+'">Sil</button></div>'}).join("");
+ document.querySelectorAll("#plist button").forEach(function(b){b.onclick=function(){if(confirm("Bu fotoğraf silinsin mi?"))pDel(+b.dataset.i).then(renderP)}})})}
+$("pa").onchange=show2;$("pb").onchange=show2;
+$("pin").onchange=function(){var f=this.files&&this.files[0],inp=this;if(!f)return;var u=URL.createObjectURL(f),im=new Image();
+ im.onload=function(){var w=480,h=Math.round(im.height*w/im.width),c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);URL.revokeObjectURL(u);
+  pAdd({d:isod(new Date()),img:c.toDataURL("image/jpeg",0.75)}).then(function(){banner("Fotoğraf kaydedildi");renderP()},function(){banner("Fotoğraf kaydedilemedi")});inp.value=""};
+ im.onerror=function(){banner("Fotoğraf okunamadı")};im.src=u};
+function renderT(){renderW();ph();loadDay();renderP()}
 })();
 </script>
 </body></html>
