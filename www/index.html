@@ -255,6 +255,12 @@ var SP={
 "Calf Raise":{i:["Standing_Dumbbell_Calf_Raise","Standing_Calf_Raises"],k:[["calf","raise","dumbbell"],["standing","calf","raise"]],x:["seated","donkey","smith","machine","single","one","press","barbell"]},
 "Crunch":{i:["Crunches"],k:[["crunch"]],x:["reverse","bicycle","cable","decline","machine","weighted","oblique","ball","stability","side","alternate","double","hanging","kneeling","band","incline","smith","air","cross"]},
 "Reverse Crunch":{i:["Reverse_Crunch"],k:[["reverse","crunch"]],x:["cable","machine","decline","bench","incline"]},
+"Göğüs Esnetme":{i:[],k:[["chest","stretch"],["chest","shoulder","stretch"]],x:["leg","foam","triceps"]},
+"Omuz Esnetme":{i:[],k:[["shoulder","stretch"],["cross","body","stretch"]],x:["chest","triceps","rear","overhead"]},
+"Kalça Önü Esnetme":{i:[],k:[["hip","flexor"],["kneeling","hip"]],x:["foam","hyper"]},
+"Bacak Arkası Esnetme":{i:[],k:[["hamstring","stretch"],["hamstring"]],x:["foam","curl","machine","deadlift","romanian","stiff","glute"]},
+"Bel Esnetme":{i:[],k:[["knee","chest"],["lower","back","stretch"],["child"]],x:["hanging","pull","lunge","hyperextension"]},
+"Baldır Esnetme":{i:[],k:[["calf","stretch"]],x:["raise","press"]},
 "_el":{i:["Elliptical_Trainer"],k:[["elliptical"]],x:[]},
 "_bk":{i:[],k:[["bicycling","stationary"],["stationary","bike"],["bike"]],x:["air","recumbent"]}
 };
@@ -277,9 +283,85 @@ function res(db){var m={},low={};db.forEach(function(e){low[e.id.toLowerCase()]=
   for(var j=0;j<s.i.length&&!f;j++)f=low[s.i[j].toLowerCase()];
   for(var a=0;a<s.k.length&&!f;a++){var c=db.filter(function(e){var id=e.id.toLowerCase();return e.images&&e.images.length&&s.k[a].every(function(t){return id.indexOf(t)>-1})&&!(s.x||[]).some(function(t){return id.indexOf(t)>-1})});c.sort(function(p,q){return p.id.length-q.id.length});f=c[0]}
   if(f&&f.images&&f.images.length)m[k]={id:f.id,n:f.name,im:f.images.slice(0,2)}});return m}
-var miss=Object.keys(SP).some(function(k){return !map[k]});
-if(miss&&navigator.onLine!==false&&Date.now()-L.g("phtry2",0)>21600000){L.s("phtry2",Date.now());
- fetch(B+"dist/exercises.json").then(function(r){return r.json()}).then(function(db){map=res(db);L.s("phmap2",map)}).catch(function(){})}
+function load(force){var miss=Object.keys(SP).some(function(k){return !map[k]});
+ if(!force){if(!miss)return Promise.resolve();if(L.g("phok",0)&&Date.now()-L.g("phtry3",0)<86400000)return Promise.resolve()}
+ L.s("phtry3",Date.now());L.s("phst","yükleniyor…");
+ return fetch(B+"dist/exercises.json").then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(function(db){map=res(db);L.s("phmap2",map);L.s("phok",1);L.s("phst","tamam: "+Object.keys(map).length+"/"+Object.keys(SP).length+" hareket eşleşti")}).catch(function(e){L.s("phst","hata: "+((e&&e.message)||e))})}
+window.PHX={load:load};load(false);
+try{window.addEventListener("online",function(){load(false)})}catch(e){}
+})();
+</script>
+<script>
+(function(){
+function iso(){var d=new Date();return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function fd(d){return d.split("-").slice(1).reverse().join(".")}
+var fig=$("fig"),ph=fig.previousSibling;
+// ---- Esneme rutini
+var ST=[["Göğüs Esnetme","Ellerini arkada birleştir, göğsünü öne aç, omuzlar geride. Yavaş nefes ver."],["Omuz Esnetme","Bir kolunu göğsünün önünden karşıya çek, diğer koluyla tut. İlk 20 sn bir taraf, sonra kol değiştir."],["Kalça Önü Esnetme","Bir dizin yerde, diğer ayak önde. Kalçanı hafifçe öne ver, gövde dik. İlk 20 sn bir bacak, sonra değiştir."],["Bacak Arkası Esnetme","Bir bacağını öne uzat, topuk yerde. Sırtını düz tutarak öne eğil. İlk 20 sn bir bacak, sonra değiştir."],["Bel Esnetme","Sırtüstü yat, dizlerini göğsüne çek ve sarıl. Yavaş nefes al."],["Baldır Esnetme","Duvara yaslan, bir bacağın geride, topuk yerde. İlk 20 sn bir bacak, sonra değiştir."]];
+var SN={};ST.forEach(function(s){T[s[0]]=s[1];V[s[0]]="st";SN[s[0]]=1});
+D.forEach(function(d){var o=[];d.x.forEach(function(x){if(x.n==="Esneme"){var sec=x.sec>=600?90:45;ST.forEach(function(s){o.push({n:s[0],s:1,r:"",sec:sec,rest:0})})}else o.push(x)});d.x=o});
+list();
+var _sg=setFig,cap=fig&&fig.nextSibling&&fig.nextSibling.nextSibling;
+setFig=function(x){_sg(x);var h=!!SN[x.n];if(h&&ph.style.display!=="block")fig.style.display="none";if(cap&&/^Basit/.test(cap.textContent))cap.style.display=(h||ph.style.display==="block")?"none":""};
+// ---- Set günlüğü (antrenman sırasında)
+var lgBox=document.createElement("div");lgBox.id="lg";lgBox.style.display="none";
+lgBox.innerHTML='<div class="mut" id="lgl" style="margin-bottom:6px"></div><div class="row" style="margin-bottom:10px"><label>Ağırlık (kg)<input type="number" id="lkg" step="0.5" inputmode="decimal"></label><label>Tekrar<input type="number" id="lrp" inputmode="numeric"></label></div>';
+$("rbtn").parentNode.insertBefore(lgBox,$("rbtn"));
+function hist(n){return L.g("log",{})[n]||[]}
+function showLg(){var x=D[sel].x[R.i];if(R.resting||!x||x.sec){lgBox.style.display="none";return}
+ var h=hist(x.n),k=dk(),td=h.filter(function(e){return e.d===k})[0],pv=h.filter(function(e){return e.d!==k}).pop();
+ $("lgl").textContent=pv?"Geçen sefer ("+fd(pv.d)+"): "+pv.s.map(function(s){return s[0]+" kg × "+s[1]}).join(" · "):"Henüz kayıt yok. Bu setin kaydedilecek.";
+ var src=(td&&R.set>1&&td.s[R.set-2])||(pv&&(pv.s[R.set-1]||pv.s[pv.s.length-1]))||null;
+ $("lkg").value=src?src[0]:"";$("lrp").value=src?src[1]:"";lgBox.style.display="block"}
+function logSet(x){var kg=parseFloat($("lkg").value),rp=parseInt($("lrp").value,10);if(isNaN(kg)&&isNaN(rp))return;
+ kg=isNaN(kg)?0:kg;rp=isNaN(rp)?0:rp;var l=L.g("log",{}),a=l[x.n]||[],k=dk(),e=a.filter(function(q){return q.d===k})[0];
+ if(!e){e={d:k,s:[]};a.push(e)}e.s[R.set-1]=[kg,rp];if(a.length>40)a.shift();l[x.n]=a;L.s("log",l)}
+var _o=$("rbtn").onclick,nh=function(){var x=D[sel].x[R.i];if(x&&!R.resting&&!x.sec)logSet(x);_o.call(this)};
+$("rbtn").onclick=nh;orig=nh;
+var _st=step;step=function(){_st();showLg()};
+var _rs=rest;rest=function(a,b){_rs(a,b);lgBox.style.display="none"};
+var _fn=fin;fin=function(){_fn();lgBox.style.display="none"};
+// ---- Plan sekmesi kartları
+var plan=$("s-plan");
+function card(h){var d=document.createElement("div");d.className="card";d.innerHTML=h;plan.appendChild(d);return d}
+$("trk").parentNode.style.display="none";
+var F=[["k","Kilo (kg)","Kilo"],["b","Bel (cm)","Bel"],["g","Göğüs (cm)","Göğüs"],["o","Omuz (cm)","Omuz"],["a","Kol (cm)","Kol"],["u","Uyluk (cm)","Uyluk"]];
+card('<h2>Ölçümler</h2><div class="mut">Hep aynı koşulda ölç: sabah, tuvaletten sonra, aç karnına. Bel için göbek deliği hizası. Haftada bir yeterli.</div><label style="display:block;margin-top:10px">Tarih<input type="date" id="md"></label><div id="mf" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0"></div><button class="btn" id="msv">Kaydet</button><div style="margin:14px 0 6px"><select id="msel"></select></div><svg id="mch" viewBox="0 0 300 150" style="width:100%"></svg><div class="mut" id="msum"></div><div id="mlist"></div>');
+$("mf").innerHTML=F.map(function(f){return '<label>'+f[1]+'<input type="number" step="0.1" inputmode="decimal" id="m_'+f[0]+'"></label>'}).join("");
+$("msel").innerHTML=F.map(function(f){return '<option value="'+f[0]+'">Grafik: '+f[2]+'</option>'}).join("");
+$("md").value=iso();
+function drawM(){var m=L.g("meas",[]),k=$("msel").value,pts=m.filter(function(e){return typeof e[k]==="number"}).slice(-12),svg=$("mch");
+ if(!pts.length){svg.innerHTML='<text x="150" y="75" text-anchor="middle" fill="var(--mut)" font-size="13">Henüz veri yok</text>';$("msum").textContent=""}
+ else{var v=pts.map(function(e){return e[k]}),mn=Math.min.apply(0,v),mx=Math.max.apply(0,v),pd=(mx-mn)||1,X=function(i){return pts.length===1?150:30+i*(240/(pts.length-1))},Y=function(y){return 115-((y-mn)/pd)*80};
+  svg.innerHTML='<polyline points="'+pts.map(function(e,i){return X(i).toFixed(1)+","+Y(e[k]).toFixed(1)}).join(" ")+'" fill="none" stroke="var(--wat)" stroke-width="3" stroke-linejoin="round"/>'+pts.map(function(e,i){return '<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(e[k]).toFixed(1)+'" r="4" fill="var(--wat)"/><text x="'+X(i).toFixed(1)+'" y="'+(Y(e[k])-9).toFixed(1)+'" text-anchor="middle" font-size="11" fill="var(--ink)">'+e[k]+'</text>'}).join("")+'<text x="30" y="145" font-size="10" fill="var(--mut)">'+fd(pts[0].d)+'</text><text x="270" y="145" text-anchor="end" font-size="10" fill="var(--mut)">'+fd(pts[pts.length-1].d)+'</text>';
+  var dl=v[v.length-1]-v[0];$("msum").textContent="İlk: "+v[0]+" → Son: "+v[v.length-1]+" ("+(dl>0?"+":"")+dl.toFixed(1)+")"}
+ $("mlist").innerHTML=m.slice().reverse().map(function(e){return '<div class="ex"><span style="flex:1"><b>'+fd(e.d)+'</b><br><span class="mut">'+F.filter(function(f){return e[f[0]]!==undefined}).map(function(f){return f[2]+": "+e[f[0]]}).join(" · ")+'</span></span><button class="btn g" data-d="'+e.d+'">Sil</button></div>'}).join("");
+ document.querySelectorAll("#mlist button").forEach(function(b){b.onclick=function(){if(!confirm("Bu ölçüm silinsin mi?"))return;L.s("meas",L.g("meas",[]).filter(function(e){return e.d!==b.dataset.d}));drawM()}})}
+$("msel").onchange=drawM;
+$("msv").onclick=function(){var d=$("md").value||iso(),m=L.g("meas",[]),e=m.filter(function(q){return q.d===d})[0],any=false;if(!e){e={d:d};m.push(e)}
+ F.forEach(function(f){var v=parseFloat($("m_"+f[0]).value);if(!isNaN(v)){e[f[0]]=v;any=true}});
+ if(!any){banner("En az bir değer gir");return}
+ m.sort(function(a,b){return a.d<b.d?-1:1});L.s("meas",m);F.forEach(function(f){$("m_"+f[0]).value=""});drawM();banner("Ölçüm kaydedildi")};
+card('<h2>Set günlüğü</h2><div class="mut">Antrenmanda kaydettiğin ağırlık ve tekrarlar.</div><select id="lsel" style="margin:10px 0"></select><div id="llist"></div>');
+function drawL(){var l=L.g("log",{}),ks=Object.keys(l),s=$("lsel"),cur=s.value;
+ s.innerHTML=ks.length?ks.map(function(k){return '<option>'+k+'</option>'}).join(""):'<option>Kayıt yok</option>';if(ks.indexOf(cur)>-1)s.value=cur;
+ var a=l[s.value]||[],best=null;a.forEach(function(e){e.s.forEach(function(t){if(t&&(!best||t[0]*t[1]>best[0]*best[1]))best=t})});
+ $("llist").innerHTML=(best?'<div class="mut">En iyi set: '+best[0]+' kg × '+best[1]+'</div>':"")+a.slice(-8).reverse().map(function(e){return '<div class="ex"><span><b>'+fd(e.d)+'</b><br><span class="mut">'+e.s.filter(Boolean).map(function(t){return t[0]+" kg × "+t[1]}).join(" · ")+'</span></span></div>'}).join("")}
+$("lsel").onchange=drawL;
+card('<h2>Yedekleme</h2><div class="mut">Uygulamayı silmeden önce yedek al. Kopyala, WhatsApp kendime mesaj veya Notlar uygulamasına yapıştır. Geri yüklerken aynı metni aşağıdaki kutuya yapıştır.</div><textarea id="bkt" rows="4" style="width:100%;margin:10px 0;border:1px solid var(--ln);border-radius:10px;background:var(--bg);color:var(--ink);padding:8px;font-size:12px" placeholder="Yedek metni burada görünür veya buraya yapıştır"></textarea><div class="row"><button class="btn w" id="bkc">Yedeği kopyala</button><button class="btn g" id="bkr">Geri yükle</button></div><div class="mut" id="bks" style="margin-top:8px"></div>');
+function bk(){$("bks").textContent="Son yedek: "+(L.g("lastbk",null)||"henüz alınmadı")}
+function exp(){var d={};try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(/^(phmap2|phtry2|phtry3|phok|phst|last)$/.test(k))continue;d[k]=localStorage.getItem(k)}}catch(e){}return JSON.stringify({app:"spor-su",v:1,t:iso(),data:d})}
+function fb(t,ok){try{var a=$("bkt");a.value=t;a.select();document.execCommand("copy");ok()}catch(e){banner("Metni elle seçip kopyala")}}
+$("bkc").onclick=function(){var t=exp();$("bkt").value=t;var ok=function(){L.s("lastbk",iso());bk();banner("Yedek kopyalandı. Bir yere yapıştırıp sakla.")};
+ try{navigator.clipboard.writeText(t).then(ok,function(){fb(t,ok)})}catch(e){fb(t,ok)}};
+$("bkr").onclick=function(){try{var o=JSON.parse($("bkt").value);if(o.app!=="spor-su"||!o.data)throw 0;if(!confirm("Mevcut kayıtların bu yedekle değiştirilecek. Devam edilsin mi?"))return;
+ Object.keys(o.data).forEach(function(k){localStorage.setItem(k,o.data[k])});banner("Yedek yüklendi, uygulama yenileniyor");setTimeout(function(){location.reload()},1200)}catch(e){banner("Geçerli bir yedek metni bulunamadı")}};
+document.querySelector('nav button[data-t="plan"]').addEventListener("click",function(){drawM();drawL();bk()});
+card('<h2>Fotoğraflar</h2><div class="mut" id="phs"></div><button class="btn g" id="phr" style="margin-top:8px">Fotoğrafları yenile</button>');
+function phs(){$("phs").textContent="Durum: "+(L.g("phst",null)||"henüz denenmedi")}
+$("phr").onclick=function(){$("phs").textContent="Durum: yükleniyor…";window.PHX.load(true).then(phs)};
+document.querySelector('nav button[data-t="plan"]').addEventListener("click",phs);phs();
+drawM();drawL();bk();
 })();
 </script>
 </body></html>
