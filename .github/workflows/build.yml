@@ -17,6 +17,10 @@ jobs:
           java-version: 17
       - run: npm install
       - run: npx cap add android
+      - name: Ikon
+        run: |
+          cp -r icons/. android/app/src/main/res/
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n<color name="ic_launcher_background">#FFFFFF</color>\n</resources>\n' > android/app/src/main/res/values/ic_launcher_background.xml
       - name: Bildirim izinleri
         run: |
           M=android/app/src/main/AndroidManifest.xml
